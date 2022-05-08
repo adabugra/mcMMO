@@ -50,3 +50,8 @@ jobs:
     # 4. Build via Maven 
     - name: Build via Maven
       run: mvn verify -B --file pom.xml
+    #5
+    - uses: actions/upload-artifact@v2
+      with:
+        name: Package
+        path: artifact
