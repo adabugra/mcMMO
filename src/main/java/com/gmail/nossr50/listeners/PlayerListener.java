@@ -8,7 +8,6 @@ import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.datatypes.skills.SubSkillType;
 import com.gmail.nossr50.datatypes.skills.subskills.taming.CallOfTheWildType;
 import com.gmail.nossr50.events.McMMOReplaceVanillaTreasureEvent;
-import com.gmail.nossr50.events.fake.FakePlayerAnimationEvent;
 import com.gmail.nossr50.locale.LocaleLoader;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.party.ShareHandler;
@@ -428,7 +427,9 @@ public class PlayerListener implements Listener {
                     ItemStack inHand = player.getInventory().getItemInMainHand();
 
                     //Grab lure level
-                    if(inHand != null && inHand.getType().getKey().getKey().equalsIgnoreCase("fishing_rod")) {
+                    if(inHand != null
+                            && inHand.getItemMeta() != null
+                            && inHand.getType().getKey().getKey().equalsIgnoreCase("fishing_rod")) {
                         if(inHand.getItemMeta().hasEnchants()) {
                             for(Enchantment enchantment : inHand.getItemMeta().getEnchants().keySet()) {
                                 if(enchantment.toString().toLowerCase().contains("lure")) {
@@ -436,10 +437,14 @@ public class PlayerListener implements Listener {
                                 }
                             }
                         }
-                    }
 
-                    fishingManager.masterAngler(event.getHook(), lureLevel);
-                    fishingManager.setFishingTarget();
+                    // Prevent any potential odd behavior by only processing if no offhand fishing rod is present
+                    if(!player.getInventory().getItemInOffHand().getType().getKey().getKey().equalsIgnoreCase("fishing_rod")) {
+                        // In case of offhand fishing rod, don't process anything
+                        fishingManager.masterAngler(event.getHook(), lureLevel);
+                        fishingManager.setFishingTarget();
+                    }
+                }
                 }
                 return;
             case CAUGHT_FISH:
@@ -835,7 +840,7 @@ public class PlayerListener implements Listener {
 
                 HerbalismManager herbalismManager = mcMMOPlayer.getHerbalismManager();
 
-                FakePlayerAnimationEvent fakeSwing = new FakePlayerAnimationEvent(event.getPlayer()); //PlayerAnimationEvent compat
+                // FakePlayerAnimationEvent fakeSwing = new FakePlayerAnimationEvent(event.getPlayer(), PlayerAnimationType.ARM_SWING); //PlayerAnimationEvent compat
                 if(!event.isCancelled() || event.useInteractedBlock() != Event.Result.DENY) {
                     //TODO: Is this code to set false from bone meal even needed? I'll have to double check later.
                     if (heldItem.getType() == Material.BONE_MEAL) {
@@ -854,7 +859,7 @@ public class PlayerListener implements Listener {
                     if (herbalismManager.canGreenThumbBlock(blockState)) {
                         //call event for Green Thumb Block
                         if(!EventUtils.callSubSkillBlockEvent(player, SubSkillType.HERBALISM_GREEN_THUMB, block).isCancelled()) {
-                            Bukkit.getPluginManager().callEvent(fakeSwing);
+                            // Bukkit.getPluginManager().callEvent(fakeSwing);
                             player.getInventory().getItemInMainHand().setAmount(heldItem.getAmount() - 1);
                             player.updateInventory();
                             if (herbalismManager.processGreenThumbBlocks(blockState) && EventUtils.simulateBlockBreak(block, player, false)) {
@@ -865,7 +870,7 @@ public class PlayerListener implements Listener {
                     /* SHROOM THUMB CHECK */
                     else if (herbalismManager.canUseShroomThumb(blockState)) {
                         if(!EventUtils.callSubSkillBlockEvent(player, SubSkillType.HERBALISM_SHROOM_THUMB, block).isCancelled()) {
-                            Bukkit.getPluginManager().callEvent(fakeSwing);
+                            // Bukkit.getPluginManager().callEvent(fakeSwing);
                             event.setCancelled(true);
                             if (herbalismManager.processShroomThumb(blockState)
                                     && EventUtils.simulateBlockBreak(block, player, false)) {
