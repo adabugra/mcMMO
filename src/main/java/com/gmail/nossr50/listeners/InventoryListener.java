@@ -54,34 +54,29 @@ public class InventoryListener implements Listener {
         }
 
         Furnace furnace = (Furnace) furnaceState;
-
         OfflinePlayer offlinePlayer = mcMMO.getSmeltingTracker().getFurnaceOwner(furnace);
+        Player player;
 
-        if(offlinePlayer != null && offlinePlayer.isOnline()) {
+        if(offlinePlayer != null && offlinePlayer.isOnline() && offlinePlayer instanceof Player) {
+            player = (Player) offlinePlayer;
 
-            Player player = Bukkit.getPlayer(offlinePlayer.getUniqueId());
+            if (!Permissions.isSubSkillEnabled(player, SubSkillType.SMELTING_FUEL_EFFICIENCY)) {
+                return;
+            }
 
-            if(player != null) {
-                if (!Permissions.isSubSkillEnabled(player, SubSkillType.SMELTING_FUEL_EFFICIENCY)) {
-                    return;
-                }
+            McMMOPlayer mmoPlayer = UserManager.getPlayer(player);
 
-                //Profile doesn't exist
-                if(UserManager.getOfflinePlayer(offlinePlayer) == null) {
-                    return;
-                }
-
-
-                boolean debugMode = player.isOnline() && UserManager.getPlayer(player).isDebugMode();
+            if(mmoPlayer != null) {
+                boolean debugMode = mmoPlayer.isDebugMode();
 
                 if(debugMode) {
                     player.sendMessage("FURNACE FUEL EFFICIENCY DEBUG REPORT");
                     player.sendMessage("Furnace - "+furnace.hashCode());
-                    player.sendMessage("Furnace Type: "+furnaceBlock.getType().toString());
+                    player.sendMessage("Furnace Type: "+furnaceBlock.getType());
                     player.sendMessage("Burn Length before Fuel Efficiency is applied - "+event.getBurnTime());
                 }
 
-                event.setBurnTime(UserManager.getPlayer(player).getSmeltingManager().fuelEfficiency(event.getBurnTime()));
+                event.setBurnTime(mmoPlayer.getSmeltingManager().fuelEfficiency(event.getBurnTime()));
 
                 if(debugMode) {
                     player.sendMessage("New Furnace Burn Length (after applying fuel efficiency) "+event.getBurnTime());
@@ -89,7 +84,6 @@ public class InventoryListener implements Listener {
                 }
             }
         }
-
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
