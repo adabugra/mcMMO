@@ -114,7 +114,7 @@ public class SwordsManager extends SkillManager {
 
         if(rank > 0)
         {
-            return (1.0D + (rank * 1.5));
+            return (1.0D + (rank * 1.1));
         }
 
         return 0;
